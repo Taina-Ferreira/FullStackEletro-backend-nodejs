@@ -3,6 +3,7 @@ const cors = require('cors');
 const mysql = require('mysql');
 var bodyParser = require('body-parser');
 
+const Mensagem = require('./mongodb');
 
 var app = express();
 app.use(bodyParser.json({limit: '100mb'}));
@@ -36,9 +37,9 @@ app.post('/produtos', (req,res) => {
 
     connection.query(sql, (error, result) => {
         if (error) {
-            res.send(error)
+            res.status(400).send(error)
         } else {
-            res.send('inserido',200);
+            res.status(200).send('inserido');
         }
     });
 });
@@ -48,9 +49,9 @@ app.get('/produtos', (req,res) => {
     
     connection.query(sql, (error, result) => {
         if (error) {
-            res.send(error)
+            res.status(400).send(error)
         } else {
-            res.send(result);
+            res.status(200).send(result);
         }
     });
 });
@@ -60,12 +61,40 @@ app.get('/categorias', (req,res) => {
 
     connection.query(sql, (error, result) => {
         if (error) {
-            res.send(error,400)
+            res.status(400).send(error)
         } else {
-            res.send(result,200);
+            res.status(200).send(result);
         }
     });
 });
+
+
+app.get('/mensagem', async (req,res) => {
+    try {
+        const mensagens = await Mensagem.find();
+        res.status(200).send(mensagens)
+    } catch (err) {
+        res.status(400).send({error:err})
+    }
+});
+
+app.post('/mensagem', async (req,res) => {
+    try {
+        const mensagem = new Mensagem(req.body).save()
+        .then(
+            () => res.status(200).send(mensagem)
+        )
+        .catch(
+            async () => res.status(400).send({error: "Não foi possivel inserir"})    
+        )
+
+        res.status(200).send(mensagem)
+
+    } catch (err) {
+        res.status(400).send({error:err})
+    }
+});
+
 
 
 app.listen(4000,() => console.log('servidor rodando'));
